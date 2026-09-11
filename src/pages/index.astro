@@ -11,7 +11,7 @@ const recent = posts.filter(p=>p.id!==featured?.id).slice(0,5);
 ---
 <BaseLayout>
  <div class="container home">
-  <section class="home-intro"><div><p class="eyebrow">UM ESPAÇO PARA IDEIAS</p><h1>O mundo pede<br class="mobile-break"/> uma <em>nova linha.</em></h1><p></p></div><Lines large/></section>
+  <section class="home-intro"><div><p class="eyebrow">Meus textos completamente parciais e sem filtro</p><h1> Viva Cristo REI<br class="mobile-break"/><em></em></h1><p></p></div><Lines large/></section>
   <div class="editorial-grid">
    <div class="main-column">
     {featured && <section class="featured" aria-labelledby="featured-title"><div class="feature-top"><span class="eyebrow">EM DESTAQUE</span><CategoryBadge name={featured.data.category}/></div><h2 id="featured-title"><a href={postPath(featured)}>{featured.data.title}</a></h2><p class="feature-description">{featured.data.description}</p>{featured.data.cover && <img class="feature-cover" src={imagePath(featured.data.cover)} alt={featured.data.coverAlt} width="1000" height="600"/>}<div class="feature-bottom"><div class="post-meta"><time datetime={featured.data.date.toISOString()}>{shortDate(featured.data.date)}</time><span>·</span><span>{readingTime(featured)} min de leitura</span></div><a class="text-link" href={postPath(featured)}>Ler texto <Icon name="arrow" size={18}/></a></div></section>}
