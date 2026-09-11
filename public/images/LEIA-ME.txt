@@ -1,0 +1,3 @@
+Coloque suas imagens nesta pasta.
+No Markdown, use: ![Descrição da imagem](/images/nome-da-imagem.webp)
+Não é obrigatório usar imagens de capa.

@@ -1,0 +1,2 @@
+import { getPosts, postPath, readingTime, shortDate, plainText, categories } from '../lib/posts';
+export async function GET(){const posts=await getPosts();return new Response(JSON.stringify(posts.map(p=>({title:p.data.title,description:p.data.description,category:p.data.category,color:categories.find(c=>c.name===p.data.category)?.color,tags:p.data.tags,body:plainText(p.body),date:p.data.date.toISOString(),dateLabel:shortDate(p.data.date),minutes:readingTime(p),url:postPath(p),demo:p.data.demo}))),{headers:{'Content-Type':'application/json; charset=utf-8'}});}

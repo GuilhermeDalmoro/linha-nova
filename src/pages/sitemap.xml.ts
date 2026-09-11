@@ -1,0 +1,3 @@
+import {getPosts,categories,allTags,slugify,absolute} from '../lib/posts';
+import {xml} from '../lib/xml';
+export async function GET(){const posts=await getPosts();const routes=['','textos/','categorias/','sobre/','links/',...categories.map(c=>`categoria/${c.slug}/`),...allTags(posts).map(t=>`tag/${slugify(t)}/`)];const urls=routes.map(route=>`<url><loc>${xml(absolute(route))}</loc></url>`).join('')+posts.map(p=>`<url><loc>${xml(absolute(`textos/${p.id}/`))}</loc><lastmod>${(p.data.updated||p.data.date).toISOString().slice(0,10)}</lastmod></url>`).join('');return new Response(`<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls}</urlset>`,{headers:{'Content-Type':'application/xml; charset=utf-8'}});}

@@ -1,0 +1,14 @@
+---
+import Logo from './Logo.astro';
+import Lines from './Lines.astro';
+import Icon from './Icon.astro';
+import { path, safeLink } from '../lib/posts';
+import config from '../../site.config.mjs';
+const links = config.links.filter(x=>safeLink(x.url));
+---
+<footer class="site-footer">
+ <div class="container">
+  <div class="footer-top"><div><a class="brand-link" href={path()} aria-label="Linha Nova — início"><Logo/></a><p>Independente na internet desde 2026.</p></div><Lines large/></div>
+  <div class="footer-bottom"><span>© {new Date().getFullYear()} Linha Nova</span><nav aria-label="Links do rodapé"><a href={path()}>Início</a><a href={path('categorias/')}>Categorias</a><a href={path('textos/')}>Textos</a><a href={path('sobre/')}>Sobre</a><a href={path('links/')}>Links</a><a href={path('feed.xml')}><Icon name="rss" size={15}/> RSS</a>{links.slice(0,2).map(link=><a href={link.url} target="_blank" rel="noopener noreferrer">{link.name}</a>)}<a href={path('autor/')} class="author-link"><Icon name="key" size={14}/> Acesso do autor</a></nav></div>
+ </div>
+</footer>

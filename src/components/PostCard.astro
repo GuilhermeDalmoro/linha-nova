@@ -1,0 +1,10 @@
+---
+import CategoryBadge from './CategoryBadge.astro';
+import Icon from './Icon.astro';
+import { postPath, shortDate, readingTime } from '../lib/posts';
+const { post } = Astro.props;
+---
+<article class="post-card">
+ <div class="post-main"><CategoryBadge name={post.data.category}/><h2><a href={postPath(post)}>{post.data.title}</a></h2><p>{post.data.description}</p><div class="post-meta"><time datetime={post.data.date.toISOString()}>{shortDate(post.data.date)}</time><span aria-hidden="true">·</span><span>{readingTime(post)} min de leitura</span>{post.data.demo && <span class="demo-label">Exemplo</span>}</div></div>
+ <a class="post-arrow" href={postPath(post)} aria-label={`Ler: ${post.data.title}`}><Icon name="arrow" size={22}/></a>
+</article>

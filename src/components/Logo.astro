@@ -1,0 +1,7 @@
+---
+const { compact = false } = Astro.props;
+---
+<span class:list={['brand', { compact }]}>
+  <svg class="monogram" viewBox="0 0 62 54" fill="none" aria-hidden="true"><path d="M8 9V45H27" stroke="#587DA0" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/><path d="M30 45V9L54 45" stroke="#C66C5D" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/><path d="M54 45V9" stroke="#D4AD42" stroke-width="10" stroke-linecap="round"/></svg>
+  {!compact && <span class="brand-name">Linha Nova<span class="brand-caption">PUBLICAÇÃO INDEPENDENTE</span></span>}
+</span>

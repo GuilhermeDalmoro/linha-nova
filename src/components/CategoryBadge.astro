@@ -1,0 +1,6 @@
+---
+import { categories, path, slugify } from '../lib/posts';
+const { name } = Astro.props;
+const category = categories.find(c=>c.name===name);
+---
+<a class:list={['category-badge',category?.color]} href={path(`categoria/${slugify(name)}/`)}>{name}</a>

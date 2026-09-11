@@ -1,0 +1,21 @@
+---
+import { render } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import CategoryBadge from '../../components/CategoryBadge.astro';
+import Lines from '../../components/Lines.astro';
+import Tag from '../../components/Tag.astro';
+import ShareButtons from '../../components/ShareButtons.astro';
+import Comments from '../../components/Comments.astro';
+import { getPosts, path, postPath, dateLabel, readingTime, absolute, imagePath } from '../../lib/posts';
+import config from '../../../site.config.mjs';
+export async function getStaticPaths(){const posts=await getPosts();return posts.map((post,index)=>({params:{slug:post.id},props:{post,newer:posts[index-1],older:posts[index+1]}}));}
+const {post,newer,older}=Astro.props;
+const {Content}=await render(post);
+---
+<BaseLayout title={post.data.title} description={post.data.description} article={post}>
+ <div class="container article-shell"><nav class="breadcrumb" aria-label="Caminho da página"><a href={path()}>Início</a><span aria-hidden="true">/</span><a href={path('textos/')}>Textos</a><span aria-hidden="true">/</span><span>{post.data.category}</span></nav>
+ <article><header class="article-header"><CategoryBadge name={post.data.category}/><h1>{post.data.title}</h1><p class="article-subtitle">{post.data.subtitle || post.data.description}</p><div class="article-byline"><strong>{config.author}</strong><span aria-hidden="true">·</span><time datetime={post.data.date.toISOString()}>{dateLabel(post.data.date)}</time><span aria-hidden="true">·</span><span>{readingTime(post)} min de leitura</span></div>{post.data.updated&&<p class="search-hint">Atualizado em {dateLabel(post.data.updated)}</p>}<Lines/></header>
+ <div class="reading-width">{post.data.cover&&<img class="article-cover" src={imagePath(post.data.cover)} alt={post.data.coverAlt} width="1200" height="675"/>}{post.data.demo&&<p class="demo-notice">Texto fictício de demonstração. Serve para apresentar o formato da Linha Nova e pode ser substituído pelo autor.</p>}<div class="prose"><Content/></div><div class="article-end"><div class="tags">{post.data.tags.map((tag:string)=><Tag name={tag}/>)}</div><Lines/></div></div></article>
+ <div class="reading-width"><ShareButtons title={post.data.title} url={absolute(`textos/${post.id}/`)}/><Comments slug={post.id}/><nav class="article-pagination" aria-label="Continuar a leitura">{older&&<a class="pagination-older" href={postPath(older)}><span>← TEXTO ANTERIOR</span><strong>{older.data.title}</strong></a>}{newer&&<a class="pagination-newer" href={postPath(newer)}><span>PRÓXIMO TEXTO →</span><strong>{newer.data.title}</strong></a>}</nav></div>
+ </div>
+</BaseLayout>

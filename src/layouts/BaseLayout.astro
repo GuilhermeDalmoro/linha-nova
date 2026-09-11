@@ -1,0 +1,35 @@
+---
+import '@fontsource-variable/newsreader/wght.css';
+import '@fontsource-variable/newsreader/wght-italic.css';
+import '@fontsource-variable/inter/wght.css';
+import '../styles/global.css';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import config from '../../site.config.mjs';
+import { path, absolute, imagePath } from '../lib/posts';
+const { title = config.title, description = config.description, article, noindex = false } = Astro.props;
+const fullTitle = title === config.title ? `${title} — ${description}` : `${title} — ${config.title}`;
+const canonical = new URL(Astro.url.pathname.replace(/\/404\/?$/, '/404.html'), import.meta.env.SITE).href;
+const cover = article?.data.cover ? new URL(imagePath(article.data.cover),import.meta.env.SITE).href : undefined;
+const jsonLd = article ? {'@context':'https://schema.org','@type':'BlogPosting',headline:article.data.title,description:article.data.description,datePublished:article.data.date.toISOString(),dateModified:(article.data.updated||article.data.date).toISOString(),author:{'@type':'Person',name:config.author},mainEntityOfPage:canonical,...(cover?{image:cover}:{})} : undefined;
+---
+<!doctype html>
+<html lang="pt-BR">
+ <head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="generator" content={Astro.generator}/><title>{fullTitle}</title>
+  <meta name="description" content={description}/><link rel="canonical" href={canonical}/>
+  <meta name="theme-color" content="#F6F2E9"/>
+  <link rel="icon" type="image/svg+xml" href={path('favicon.svg')}/>
+  <link rel="alternate" type="application/rss+xml" title="Linha Nova — RSS" href={absolute('feed.xml')}/>
+  <meta property="og:locale" content="pt_BR"/><meta property="og:site_name" content="Linha Nova"/>
+  <meta property="og:title" content={title}/><meta property="og:description" content={description}/><meta property="og:url" content={canonical}/><meta property="og:type" content={article?'article':'website'}/>
+  <meta name="twitter:card" content={cover?'summary_large_image':'summary'}/><meta name="twitter:title" content={title}/><meta name="twitter:description" content={description}/>
+  {cover && <><meta property="og:image" content={cover}/><meta property="og:image:alt" content={article.data.coverAlt}/><meta name="twitter:image" content={cover}/><meta name="twitter:image:alt" content={article.data.coverAlt}/></>}
+  {article && <><meta property="article:published_time" content={article.data.date.toISOString()}/><meta property="article:author" content={config.author}/><meta property="article:section" content={article.data.category}/></>}
+  {noindex && <meta name="robots" content="noindex,follow"/>}
+  {jsonLd && <script type="application/ld+json" set:html={JSON.stringify(jsonLd).replace(/</g,'\\u003c')}/>}
+  <script is:inline>try{const t=localStorage.getItem('linha-nova-theme');document.documentElement.dataset.theme=(t==='dark'||t==='light')?t:(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');}catch{document.documentElement.dataset.theme=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}</script>
+ </head>
+ <body><a class="skip-link" href="#conteudo">Pular para o conteúdo</a><Header/><main id="conteudo"><slot/></main><Footer/></body>
+</html>

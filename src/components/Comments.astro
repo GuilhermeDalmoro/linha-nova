@@ -1,0 +1,29 @@
+---
+import config from '../../site.config.mjs';
+import Icon from './Icon.astro';
+const { slug } = Astro.props;
+const c=config.comments;
+const configured=!!(c.repo&&c.repoId&&c.category&&c.categoryId);
+---
+<section class="comments-section" id="comentarios" aria-labelledby="comments-title">
+ <h2 id="comments-title">A conversa continua.</h2>
+ <p>O que este texto te fez pensar? Discordar também faz parte — com respeito.</p>
+ {configured ? <><div class="comments-placeholder" id="comments-intro"><Icon name="chat" size={25}/><p>Para comentar, entre com sua conta do GitHub.</p><button class="outline-button" type="button" id="load-comments">Abrir comentários</button><noscript><p>Ative o JavaScript para ver os comentários aqui ou <a href={`https://github.com/${c.repo}/discussions`}>abra as discussões no GitHub</a>.</p></noscript></div><div id="giscus-container" class="giscus" data-repo={c.repo} data-repo-id={c.repoId} data-category={c.category} data-category-id={c.categoryId} data-term={`linha-nova/${slug}`}></div><p id="comments-status" class="status-message" role="status" hidden></p><p class="search-hint"><a href={`https://github.com/${c.repo}/discussions`} target="_blank" rel="noopener noreferrer">Ver as conversas no GitHub ↗</a></p></> : <div class="comments-placeholder"><Icon name="chat" size={25}/><p>Os comentários ainda não foram abertos.</p><p>Enquanto isso, compartilhe este texto e leve a conversa adiante.</p></div>}
+</section>
+<script>
+ const trigger=document.querySelector<HTMLButtonElement>('#load-comments');
+ const container=document.querySelector<HTMLElement>('#giscus-container');
+ const status=document.querySelector<HTMLElement>('#comments-status');
+ if(trigger&&container&&status){
+  trigger.addEventListener('click',()=>{
+   trigger.disabled=true;trigger.textContent='Carregando comentários…';
+   const script=document.createElement('script');script.src='https://giscus.app/client.js';script.async=true;script.crossOrigin='anonymous';
+   const attrs:Record<string,string>={'repo':container.dataset.repo!,'repo-id':container.dataset.repoId!,'category':container.dataset.category!,'category-id':container.dataset.categoryId!,'mapping':'specific','term':container.dataset.term!,'strict':'1','reactions-enabled':'0','emit-metadata':'0','input-position':'top','theme':document.documentElement.dataset.theme==='dark'?'dark':'light','lang':'pt','loading':'lazy'};
+   for(const [key,value] of Object.entries(attrs))script.setAttribute(`data-${key}`,value);
+   script.addEventListener('error',()=>{trigger.disabled=false;trigger.textContent='Tentar novamente';status.hidden=false;status.textContent='Os comentários não carregaram. Tente novamente ou abra a conversa no GitHub.';script.remove();});
+   script.addEventListener('load',()=>{document.querySelector<HTMLElement>('#comments-intro')!.hidden=true;status.hidden=true;});
+   container.appendChild(script);
+  });
+  window.addEventListener('themechange',(event)=>{const frame=container.querySelector<HTMLIFrameElement>('iframe.giscus-frame');frame?.contentWindow?.postMessage({giscus:{setConfig:{theme:(event as CustomEvent).detail==='dark'?'dark':'light'}}},'https://giscus.app');});
+ }
+</script>

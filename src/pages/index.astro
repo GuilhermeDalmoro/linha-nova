@@ -1,0 +1,28 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Lines from '../components/Lines.astro';
+import Icon from '../components/Icon.astro';
+import CategoryBadge from '../components/CategoryBadge.astro';
+import PostCard from '../components/PostCard.astro';
+import { getPosts, postPath, readingTime, shortDate, categories, path, imagePath } from '../lib/posts';
+const posts = await getPosts();
+const featured = posts.find(p=>p.data.featured) || posts[0];
+const recent = posts.filter(p=>p.id!==featured?.id).slice(0,5);
+---
+<BaseLayout>
+ <div class="container home">
+  <section class="home-intro"><div><p class="eyebrow">UM ESPAÇO PARA IDEIAS</p><h1>O mundo pede<br class="mobile-break"/> uma <em>nova linha.</em></h1><p>Textos para pensar com calma. E olhar mais uma vez.</p></div><Lines large/></section>
+  <div class="editorial-grid">
+   <div class="main-column">
+    {featured && <section class="featured" aria-labelledby="featured-title"><div class="feature-top"><span class="eyebrow">EM DESTAQUE</span><CategoryBadge name={featured.data.category}/></div><h2 id="featured-title"><a href={postPath(featured)}>{featured.data.title}</a></h2><p class="feature-description">{featured.data.description}</p>{featured.data.cover && <img class="feature-cover" src={imagePath(featured.data.cover)} alt={featured.data.coverAlt} width="1000" height="600"/>}<div class="feature-bottom"><div class="post-meta"><time datetime={featured.data.date.toISOString()}>{shortDate(featured.data.date)}</time><span>·</span><span>{readingTime(featured)} min de leitura</span></div><a class="text-link" href={postPath(featured)}>Ler texto <Icon name="arrow" size={18}/></a></div></section>}
+    <section class="recent-section" aria-labelledby="recent-title"><div class="section-heading"><h2 id="recent-title">Últimas linhas</h2><a href={path('textos/')} class="subtle-link">Todos os textos <Icon name="arrow" size={16}/></a></div>{recent.length?recent.map(post=><PostCard post={post}/>):<div class="empty-state"><h3>A primeira linha está chegando.</h3><p>Em breve, novos textos por aqui.</p></div>}</section>
+    <a class="outline-button all-posts" href={path('textos/')}>Explorar todos os textos <Icon name="arrow" size={18}/></a>
+   </div>
+   <aside class="sidebar" aria-label="Conheça a Linha Nova">
+    <section class="sidebar-about"><span class="eyebrow">OLÁ, LEITOR.</span><h2>Um lugar próprio.<br/>Uma conversa aberta.</h2><p>A Linha Nova é um espaço independente para escrever, fazer perguntas e compartilhar o que merece ficar.</p><a class="text-link" href={path('sobre/')}>Conheça o projeto <Icon name="arrow" size={16}/></a><Lines/></section>
+    <section class="sidebar-categories"><h2 class="eyebrow">POR ASSUNTO</h2>{categories.map(c=><a class="category-row" href={path(`categoria/${c.slug}/`)}><span><i class={c.color} aria-hidden="true"></i>{c.name}</span><span class="category-count">{String(posts.filter(p=>p.data.category===c.name).length).padStart(2,'0')}</span></a>)}</section>
+    <section class="rss-note"><Icon name="rss" size={22}/><h2>Acompanhe no seu ritmo.</h2><p>Os próximos textos, direto no seu leitor de RSS.</p><a class="text-link" href={path('feed.xml')}>Assinar o feed <Icon name="external" size={16}/></a></section>
+   </aside>
+  </div>
+ </div>
+</BaseLayout>

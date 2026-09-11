@@ -1,0 +1,9 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PostCard from '../../components/PostCard.astro';
+import { categories,getPosts,path } from '../../lib/posts';
+export function getStaticPaths(){return categories.map(category=>({params:{slug:category.slug},props:{category}}));}
+const {category}=Astro.props;
+const posts=(await getPosts()).filter(p=>p.data.category===category.name);
+---
+<BaseLayout title={category.name} description={category.description}><div class="container page-shell"><nav class="breadcrumb" aria-label="Caminho da página"><a href={path('categorias/')}>Categorias</a><span>/</span><span>{category.name}</span></nav><header class="page-heading"><p class="eyebrow">UMA LINHA DE LEITURA</p><h1>{category.name}.</h1><p>{category.description}</p></header><nav class="filter-list" aria-label="Escolher categoria"><a class="filter-chip" href={path('textos/')}>Todos</a>{categories.map(c=><a class:list={['filter-chip',{active:c.slug===category.slug}]} aria-current={c.slug===category.slug?'page':undefined} href={path(`categoria/${c.slug}/`)}>{c.name}</a>)}</nav><div class="text-list"><div class="list-summary"><span>{posts.length} {posts.length===1?'texto':'textos'}</span><span>Mais recentes primeiro</span></div>{posts.length?posts.map(post=><PostCard post={post}/>):<div class="empty-state"><h2>Ainda não há textos nesta categoria.</h2><p>Enquanto isso, outras linhas esperam por você.</p><a class="outline-button" href={path('textos/')}>Explorar todos os textos</a></div>}</div></div></BaseLayout>

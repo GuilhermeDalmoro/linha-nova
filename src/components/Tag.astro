@@ -1,0 +1,5 @@
+---
+import { path, slugify } from '../lib/posts';
+const { name } = Astro.props;
+---
+<a class="tag" href={path(`tag/${slugify(name)}/`)}>#{name}</a>

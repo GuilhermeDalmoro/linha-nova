@@ -1,0 +1,23 @@
+---
+import Icon from './Icon.astro';
+const { title, url } = Astro.props;
+---
+<section class="share-section" aria-labelledby="share-title" data-share-title={title} data-share-url={url}>
+ <h2 id="share-title">Uma boa conversa começa com um texto.</h2>
+ <div class="share-actions"><button type="button" class="share-button" id="copy-link" hidden><Icon name="copy" size={16}/> Copiar link</button><a class="share-button" href={`https://wa.me/?text=${encodeURIComponent(`${title}\n${url}`)}`} target="_blank" rel="noopener noreferrer">WhatsApp <Icon name="external" size={15}/></a><a class="share-button" href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(title)}&url=${encodeURIComponent(url)}`} target="_blank" rel="noopener noreferrer">X / Twitter <Icon name="external" size={15}/></a><button type="button" class="share-button" id="native-share" hidden><Icon name="share" size={16}/> Compartilhar</button></div>
+ <p class="status-message" id="share-status" role="status" hidden></p>
+ <div class="copy-fallback" id="copy-fallback" hidden><label for="article-link">Selecione e copie este endereço:</label><input id="article-link" type="url" value={url} readonly/></div>
+</section>
+<script>
+ const section=document.querySelector<HTMLElement>('[data-share-title]');
+ const copy=document.querySelector<HTMLButtonElement>('#copy-link');
+ const share=document.querySelector<HTMLButtonElement>('#native-share');
+ const status=document.querySelector<HTMLElement>('#share-status');
+ if(section&&copy&&share&&status){
+  const url=section.dataset.shareUrl!;const title=section.dataset.shareTitle!;
+  const message=(text:string)=>{status.hidden=false;status.textContent=text;};
+  copy.hidden=false;
+  copy.addEventListener('click',async()=>{try{await navigator.clipboard.writeText(url);message('Link copiado. Pode compartilhar!');}catch{const box=document.querySelector<HTMLElement>('#copy-fallback');const input=document.querySelector<HTMLInputElement>('#article-link');if(box&&input){box.hidden=false;input.focus();input.select();message('Copie o endereço selecionado.');}}});
+  if(navigator.share){share.hidden=false;share.addEventListener('click',async()=>{try{await navigator.share({title,url});}catch(error){if((error as Error).name!=='AbortError')message('Não foi possível abrir o compartilhamento. Use Copiar link.');}});}
+ }
+</script>

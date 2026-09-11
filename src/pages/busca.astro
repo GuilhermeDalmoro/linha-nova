@@ -1,0 +1,37 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Icon from '../components/Icon.astro';
+import PostCard from '../components/PostCard.astro';
+import { path, getPosts } from '../lib/posts';
+const posts=(await getPosts()).slice(0,4);
+---
+<BaseLayout title="Busca" description="Busque uma palavra, uma ideia ou um assunto nos textos da Linha Nova." noindex><div class="container page-shell"><div class="search-shell"><header class="page-heading"><p class="eyebrow">ENCONTRE O FIO DA MEADA</p><h1>O que você procura?</h1><p>Uma palavra, um assunto ou aquela ideia que ficou na cabeça.</p></header><form class="search-form" role="search" action={path('busca/')} data-index-url={path('search-index.json')}><Icon name="search"/><label class="sr-only" for="search-input">Buscar nos textos</label><input id="search-input" type="search" name="q" placeholder="Buscar na Linha Nova…" autocomplete="off" maxlength="180"/><button class="primary-button" type="submit">Buscar</button></form><p class="search-hint">A busca inclui títulos, conteúdo, categorias e tags.</p><noscript><p>Para pesquisar, ative o JavaScript. Você também pode navegar por <a class="text-link" href={path('categorias/')}>categorias</a> ou ler os textos abaixo.</p></noscript><p class="search-status" id="search-status" role="status" aria-live="polite">Algumas linhas para começar</p><div id="search-results">{posts.map(post=><PostCard post={post}/>)}</div></div></div></BaseLayout>
+<script>
+ import { searchPosts } from '../lib/search.mjs';
+ const form=document.querySelector<HTMLFormElement>('.search-form');
+ const input=document.querySelector<HTMLInputElement>('#search-input');
+ const result=document.querySelector<HTMLElement>('#search-results');
+ const status=document.querySelector<HTMLElement>('#search-status');
+ type Item={title:string;description:string;category:string;color:string;date:string;dateLabel:string;minutes:number;url:string;tags:string[];body:string};
+ if(form&&input&&result&&status){
+  let data:Item[]|undefined;let pending:Promise<Item[]>|undefined;let request=0;let debounce:ReturnType<typeof setTimeout>;
+  const initial=result.innerHTML;
+  const element=(tag:string,text:string,className='')=>{const node=document.createElement(tag);node.textContent=text;node.className=className;return node;};
+  const load=()=>{if(data)return Promise.resolve(data);if(!pending)pending=fetch(form.dataset.indexUrl!).then(r=>{if(!r.ok)throw new Error('load');return r.json();}).then(items=>{data=items;return items;}).finally(()=>{pending=undefined;});return pending;};
+  const search=async()=>{
+   const current=++request;const query=input.value.trim();
+   const url=new URL(location.href);if(query)url.searchParams.set('q',query);else url.searchParams.delete('q');history.replaceState(null,'',url);
+   if(!query){status.textContent='Algumas linhas para começar';result.innerHTML=initial;result.removeAttribute('aria-busy');return;}
+   result.setAttribute('aria-busy','true');status.textContent='Buscando nos textos…';
+   try{const posts=await load();if(current!==request)return;const matches=searchPosts(posts,query) as Item[];result.replaceChildren();status.textContent=`${matches.length} ${matches.length===1?'texto encontrado':'textos encontrados'} para “${query}”`;
+    if(!matches.length){const empty=element('div','','empty-state');empty.append(element('h2','Essa linha ainda não foi escrita.'),element('p','Tente outra palavra ou um assunto mais amplo.'));result.append(empty);}
+    for(const post of matches){const card=element('article','','post-card');const main=element('div','','post-main');const badge=element('span',post.category,`category-badge ${post.color}`);const heading=element('h2','');const link=element('a',post.title) as HTMLAnchorElement;link.href=post.url;heading.append(link);main.append(badge,heading,element('p',post.description),element('div',`${post.dateLabel} · ${post.minutes} min de leitura`,'post-meta'));card.append(main);result.append(card);}
+   }catch{if(current===request){result.replaceChildren();status.textContent='Não foi possível carregar a busca. Verifique sua conexão e clique em Buscar para tentar novamente.';}}
+   finally{if(current===request)result.removeAttribute('aria-busy');}
+  };
+  form.addEventListener('submit',event=>{event.preventDefault();clearTimeout(debounce);search();});
+  input.addEventListener('input',()=>{clearTimeout(debounce);debounce=setTimeout(search,160);});
+  input.value=new URLSearchParams(location.search).get('q')?.slice(0,180)||'';if(input.value)search();
+  window.addEventListener('popstate',()=>{input.value=new URLSearchParams(location.search).get('q')||'';search();});
+ }
+</script>

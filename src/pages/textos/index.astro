@@ -1,0 +1,8 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Lines from '../../components/Lines.astro';
+import PostCard from '../../components/PostCard.astro';
+import {getPosts,categories,path} from '../../lib/posts';
+const posts=await getPosts();
+---
+<BaseLayout title="Textos" description="Todos os artigos, ensaios e notas da Linha Nova, do mais recente ao mais antigo."><div class="container page-shell"><div class="page-heading-split"><header class="page-heading"><p class="eyebrow">PALAVRA POR PALAVRA</p><h1>Todos os textos.</h1><p>Artigos, ensaios e pequenas notas. Cada um, um convite para continuar pensando.</p></header><Lines large/></div><nav class="filter-list" aria-label="Filtrar por categoria"><a class="filter-chip active" href={path('textos/')} aria-current="page">Todos</a>{categories.map(c=><a class="filter-chip" href={path(`categoria/${c.slug}/`)}>{c.name}</a>)}</nav><div class="text-list"><div class="list-summary"><span>{posts.length} {posts.length===1?'texto publicado':'textos publicados'}</span><span>Mais recentes primeiro</span></div>{posts.length?posts.map(post=><PostCard post={post}/>):<div class="empty-state"><h2>A primeira linha está chegando.</h2><p>Em breve, novos textos por aqui.</p></div>}</div></div></BaseLayout>

@@ -1,0 +1,35 @@
+---
+import Logo from './Logo.astro';
+import Icon from './Icon.astro';
+import { path } from '../lib/posts';
+const nav = [['Início',''],['Textos','textos/'],['Categorias','categorias/'],['Sobre','sobre/'],['Links','links/']];
+const current = Astro.url.pathname.replace(/\/$/,'');
+---
+<header class="site-header">
+ <div class="container header-inner">
+  <a href={path()} class="brand-link" aria-label="Linha Nova — início"><Logo/></a>
+  <nav class="desktop-nav" aria-label="Navegação principal">{nav.map(([label,url])=><a href={path(url)} aria-current={current === path(url).replace(/\/$/,'') ? 'page' : undefined}>{label}</a>)}</nav>
+  <div class="header-actions">
+   <a class="icon-button" href={path('busca/')} aria-label="Buscar textos"><Icon name="search"/></a>
+   <button class="icon-button theme-toggle" type="button" aria-label="Ativar tema escuro" title="Mudar tema" hidden><Icon name="moon"/></button>
+   <button class="icon-button menu-toggle" type="button" aria-label="Abrir menu" aria-controls="mobile-nav" aria-expanded="false" hidden><Icon name="menu"/></button>
+  </div>
+ </div>
+ <nav id="mobile-nav" class="mobile-nav container" aria-label="Navegação no celular">{nav.map(([label,url])=><a href={path(url)} aria-current={current === path(url).replace(/\/$/,'') ? 'page' : undefined}>{label}</a>)}</nav>
+</header>
+<script>
+ const button = document.querySelector<HTMLButtonElement>('.menu-toggle');
+ const nav = document.querySelector<HTMLElement>('#mobile-nav');
+ if (button && nav) {
+  button.hidden=false; nav.dataset.enhanced='true'; nav.hidden=true;
+  const close = () => {button.setAttribute('aria-expanded','false');button.setAttribute('aria-label','Abrir menu');nav.hidden=true;};
+  button.addEventListener('click',()=>{const open=button.getAttribute('aria-expanded')==='true';button.setAttribute('aria-expanded',String(!open));button.setAttribute('aria-label',open?'Abrir menu':'Fechar menu');nav.hidden=open;});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!nav.hidden){close();button.focus();}});
+  matchMedia('(min-width: 768px)').addEventListener('change',e=>{if(e.matches)close();});
+ }
+ const themeButton = document.querySelector<HTMLButtonElement>('.theme-toggle');
+ const system = matchMedia('(prefers-color-scheme: dark)');
+ const syncTheme = () => {const dark=document.documentElement.dataset.theme==='dark';themeButton?.setAttribute('aria-label',dark?'Ativar tema claro':'Ativar tema escuro');themeButton?.setAttribute('title',dark?'Ativar tema claro':'Ativar tema escuro');};
+ if(themeButton){themeButton.hidden=false;syncTheme();themeButton.addEventListener('click',()=>{const theme=document.documentElement.dataset.theme==='dark'?'light':'dark';document.documentElement.dataset.theme=theme;try{localStorage.setItem('linha-nova-theme',theme);}catch{}syncTheme();window.dispatchEvent(new CustomEvent('themechange',{detail:theme}));});}
+ system.addEventListener('change',e=>{let manual=false;try{manual=!!localStorage.getItem('linha-nova-theme');}catch{}if(!manual){document.documentElement.dataset.theme=e.matches?'dark':'light';syncTheme();window.dispatchEvent(new CustomEvent('themechange',{detail:e.matches?'dark':'light'}));}});
+</script>

@@ -1,0 +1,8 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Icon from '../components/Icon.astro';
+import { path, safeLink } from '../lib/posts';
+import config from '../../site.config.mjs';
+const links=config.links.filter(link=>safeLink(link.url));
+---
+<BaseLayout title="Links" description="Os caminhos para acompanhar a Linha Nova e encontrar seu autor."><div class="container page-shell"><header class="page-heading"><p class="eyebrow">A CONVERSA TAMBÉM PASSA POR AQUI</p><h1>Outros caminhos.</h1><p>Para acompanhar as próximas linhas e encontrar o autor.</p></header><div class="links-grid">{links.map(link=><a class="link-card" href={link.url} target={link.url.startsWith('https:')?'_blank':undefined} rel="noopener noreferrer"><div><h2>{link.name}</h2><p>{link.description}</p></div><Icon name="external"/></a>)}<a class="link-card" href={path('feed.xml')}><div><h2>Feed RSS</h2><p>Novos textos no seu leitor favorito.</p></div><Icon name="rss"/></a><a class="link-card" href={path('textos/')}><div><h2>Todos os textos</h2><p>O melhor lugar para continuar a conversa.</p></div><Icon name="arrow"/></a></div>{!links.length&&<p class="search-hint" style="margin-top:24px">As redes e o contato do autor serão adicionados em breve.</p>}</div></BaseLayout>

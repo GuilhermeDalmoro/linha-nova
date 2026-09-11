@@ -1,0 +1,6 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Lines from '../components/Lines.astro';
+import {path} from '../lib/posts';
+---
+<BaseLayout title="Página não encontrada" noindex><div class="container error-page"><span class="error-code">404</span><Lines/><h1>Esta linha terminou aqui.</h1><p>A página que você procura não existe<br/>ou mudou de endereço.</p><a class="primary-button" href={path()}>← Voltar ao início</a></div></BaseLayout>
