@@ -9,8 +9,8 @@ tags:
 - Religião
 featured: true
 draft: false
-cover: /images/linha-nova-a276d2e8-3175-46a8-abda-ba17854eb36b.jpg
-coverAlt: Cristo
+cover: /images/linha-nova-2537d78b-e966-4ef3-ae84-bd863b350c00.jpg
+coverAlt: Maria
 ---
 
 
