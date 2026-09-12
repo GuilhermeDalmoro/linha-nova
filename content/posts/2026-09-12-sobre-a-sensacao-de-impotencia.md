@@ -1,11 +1,11 @@
 ---
 title: Sobre a sensação de impotência
 date: '2026-09-12'
-category: Cultura
+category: Filosofia
 description: Se sentir impotente
 tags: [
   ]
-featured: false
+featured: true
 draft: false
 cover: /images/linha-nova-126f4834-a6a0-4d64-b8ea-5add198d8243.jpg
 coverAlt: Esforço
