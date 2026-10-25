@@ -9,7 +9,7 @@ const editorPosts = posts.map(post => ({
   id: post.id, title: post.data.title, date: post.data.date.toISOString().slice(0,10),
   category: post.data.category, tags: post.data.tags, description: post.data.description,
   subtitle: post.data.subtitle || '', cover: post.data.cover || '', coverAlt: post.data.coverAlt || '',
-  body: post.body, filename: post.data.date.toISOString().slice(0,10) + '-' + post.id + '.md',
+  body: post.body, featured: post.data.featured, demo: post.data.demo, updated: post.data.updated?.toISOString().slice(0,10) || '', filename: post.data.date.toISOString().slice(0,10) + '-' + post.id + '.md',
 }));
 ---
 <BaseLayout title="Editor do autor" description="Escreva, revise e prepare artigos para a Linha Nova." noindex>
@@ -42,12 +42,14 @@ const editorPosts = posts.map(post => ({
   const localDate = new Date(now.getTime() - now.getTimezoneOffset()*60000).toISOString().slice(0,10);
   $('post-date').value = localDate;
   let editingFile = '';
+  let editingMetadata = {};
   function loadPost(post) {
     for (const key of fields) {
       const element = $('post-' + key);
       if (element) element.value = key === 'tags' ? (post.tags || []).join(', ') : (post[key] || (key === 'date' ? localDate : key === 'category' ? 'Cultura' : ''));
     }
     editingFile = post.filename;
+    editingMetadata = { featured: !!post.featured, demo: !!post.demo, updated: post.updated || '' };
     updatePreview();
     setStatus('Editando: ' + post.title);
   }
@@ -71,6 +73,9 @@ const editorPosts = posts.map(post => ({
     const q=s=>JSON.stringify(s||'');
     const lines=['---','title: '+q(val('title')),'date: "'+(val('date')||localDate)+'"','category: '+q(val('category')),'tags: ['+tags.map(q).join(', ')+']','description: '+q(val('description'))];
     if(val('subtitle'))lines.push('subtitle: '+q(val('subtitle')));
+    if(editingMetadata.updated)lines.push('updated: '+JSON.stringify(editingMetadata.updated));
+    if(editingMetadata.featured)lines.push('featured: true');
+    if(editingMetadata.demo)lines.push('demo: true');
     if(val('cover'))lines.push('cover: '+q(val('cover')),'coverAlt: '+q(val('coverAlt')));
     lines.push('draft: false','---','',''+val('body'),'');
     return lines.join('\n');
@@ -81,7 +86,7 @@ const editorPosts = posts.map(post => ({
   $('existing-post').addEventListener('change', () => {
     const selected = postData.find(post => post.filename === $('existing-post').value);
     if (selected) loadPost(selected);
-    else { editingFile = ''; $('author-editor').reset(); $('post-date').value = localDate; updatePreview(); setStatus('Novo rascunho'); }
+    else { editingFile = ''; editingMetadata = {}; $('author-editor').reset(); $('post-date').value = localDate; updatePreview(); setStatus('Novo rascunho'); }
   });
   $('save-local').addEventListener('click', () => {
     const data={}; for(const key of fields)data[key]=val(key);
