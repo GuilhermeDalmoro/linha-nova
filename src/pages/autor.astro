@@ -14,7 +14,7 @@ const editorPosts = posts.map(post => ({
 ---
 <BaseLayout title="Editor do autor" description="Escreva, revise e prepare artigos para a Linha Nova." noindex>
 <div class="container page-shell author-workspace">
-  <header class="page-heading author-heading"><p class="eyebrow">CADERNO DE AUTOR</p><h1>Escreva com calma.<br/><em>Publique quando quiser.</em></h1><p>Um editor simples para escrever no computador ou no celular. Seus rascunhos ficam salvos neste navegador até você exportar ou enviar ao GitHub.</p></header>
+  <header class="page-heading author-heading"><p class="eyebrow">CADERNO DE AUTOR</p><h1>Escreva com calma.<br/><em>Publique quando quiser.</em></h1><p>Um editor simples para escrever no computador ou no celular. Você pode salvar rascunhos neste navegador e continuar depois, ou exportar e preparar a publicação no GitHub.</p></header>
   <div class="editor-toolbar"><label class="editor-existing">Editar um texto publicado<select id="existing-post"><option value="">Escolha um texto para editar no GitHub…</option>{editorPosts.map(post => <option value={post.filename}>{post.title}</option>)}</select></label><span id="save-status" class="editor-status" role="status">Rascunho local</span></div>
   <form id="author-editor" class="author-editor">
     <div class="editor-fields">
@@ -104,9 +104,9 @@ const editorPosts = posts.map(post => ({
     const text=markdown();if(!text)return;
     const filePath='content/posts/'+(editingFile || fileName());
     const url=editingFile ? 'https://github.com/'+repoName+'/edit/'+targetBranch+'/'+filePath.split('/').map(encodeURIComponent).join('/') : 'https://github.com/'+repoName+'/new/'+targetBranch+'?filename='+encodeURIComponent(filePath)+'&value='+encodeURIComponent(text);
-    try { await navigator.clipboard.writeText(text);setStatus('Conteúdo copiado. Confira no GitHub e confirme a alteração.'); }
-    catch { setStatus('GitHub aberto. Se o conteúdo não aparecer, baixe o arquivo .md e cole-o no GitHub.'); }
     window.open(url,'_blank','noopener,noreferrer');
+    try { await navigator.clipboard.writeText(text);setStatus('Conteúdo copiado. Confira no GitHub e confirme a alteração.'); }
+    catch { setStatus('Se o conteúdo não aparecer no GitHub, baixe o arquivo .md e cole-o no editor do GitHub.'); }
   });
   $('toggle-preview').addEventListener('click', () => {
     const hidden=$('post-preview').hidden;$('post-preview').hidden=!hidden;
