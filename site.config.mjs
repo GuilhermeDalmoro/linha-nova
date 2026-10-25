@@ -5,7 +5,7 @@ export default {
   author: 'Guilherme',
   bio: 'Um leitor curioso, um caderno aberto e a vontade de entender o mundo. Escrevo sobre história, cultura, filosofia e o que mais pedir uma nova linha.',
   // Depois de criar o repositório, preencha no formato seuusuario/linha-nova.
-  repository: '',
+  repository: 'GuilhermeDalmoro/linha-nova',
   branch: 'main',
   // Opcional. No GitHub Pages, o endereço é detectado automaticamente.
   url: '',
