@@ -22,7 +22,7 @@ const editorPosts = posts.map(post => ({
       <div class="editor-field-row"><label>Data<input id="post-date" type="date" required/></label><label>Categoria<select id="post-category" required><option>Política</option><option>História</option><option>Religião</option><option>Filosofia</option><option selected>Cultura</option><option>Tecnologia</option></select></label></div>
       <label>Resumo<textarea id="post-description" rows="2" maxlength="260" required placeholder="Uma frase que apresente o texto ao leitor."></textarea></label>
       <label>Etiquetas <span class="field-hint">separadas por vírgula</span><input id="post-tags" placeholder="história, sociedade, reflexão"/></label>
-      <details class="editor-optional"><summary>Opções de imagem e subtítulo</summary><label>Subtítulo (opcional)<input id="post-subtitle" placeholder="Uma linha de apoio"/></label><label>Endereço da imagem de capa (opcional)<input id="post-cover" type="url" placeholder="/images/minha-imagem.webp"/></label><label>Descrição da imagem (obrigatória se usar capa)<input id="post-coverAlt" placeholder="Descreva o que aparece na imagem"/></label></details>
+      <details class="editor-optional"><summary>Opções de imagem e subtítulo</summary><label>Subtítulo (opcional)<input id="post-subtitle" placeholder="Uma linha de apoio"/></label><label>Endereço da imagem de capa (opcional)<input id="post-cover" type="text" placeholder="/images/minha-imagem.webp"/></label><label>Descrição da imagem (obrigatória se usar capa)<input id="post-coverAlt" placeholder="Descreva o que aparece na imagem"/></label></details>
     </div>
     <div class="editor-writing"><div class="editor-writing-heading"><label for="post-body">Seu texto</label><span>Markdown · funciona no celular</span></div><textarea id="post-body" rows="18" required spellcheck="true" placeholder="Comece a escrever aqui…&#10;&#10;## Um subtítulo&#10;&#10;Este é seu espaço. Escreva do seu jeito."></textarea><div class="markdown-help"><strong>Formatação rápida:</strong> <code>## Título</code> · <code>**negrito**</code> · <code>*itálico*</code> · <code>[link](https://...)</code> · <code>![descrição](/images/foto.webp)</code></div></div>
     <div class="editor-preview-wrap"><div class="editor-preview-heading"><h2>Prévia</h2><button type="button" class="subtle-link" id="toggle-preview" aria-expanded="true">Ocultar prévia</button></div><div id="post-preview" class="editor-preview prose"><p class="preview-placeholder">A prévia do texto aparecerá aqui enquanto você escreve.</p></div></div>
@@ -90,7 +90,7 @@ const editorPosts = posts.map(post => ({
   });
   $('save-local').addEventListener('click', () => {
     const data={}; for(const key of fields)data[key]=val(key);
-    data.savedAt=new Date().toISOString(); localStorage.setItem(storageKey,JSON.stringify(data));
+    data.editingFile=editingFile; data.editingMetadata=editingMetadata; data.savedAt=new Date().toISOString(); localStorage.setItem(storageKey,JSON.stringify(data));
     setStatus('Salvo neste aparelho · '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}));
   });
   $('download-markdown').addEventListener('click', () => {
@@ -113,6 +113,6 @@ const editorPosts = posts.map(post => ({
     $('toggle-preview').setAttribute('aria-expanded',String(hidden));
     $('toggle-preview').textContent=hidden?'Ocultar prévia':'Mostrar prévia';
   });
-  try { const saved=localStorage.getItem(storageKey); if(saved&&confirm('Encontramos um rascunho salvo neste aparelho. Quer recuperá-lo?')) { const data=JSON.parse(saved); for(const key of fields)if(data[key]!==undefined)$('post-'+key).value=data[key]; updatePreview();setStatus('Rascunho recuperado'); } } catch {}
+  try { const saved=localStorage.getItem(storageKey); if(saved&&confirm('Encontramos um rascunho salvo neste aparelho. Quer recuperá-lo?')) { const data=JSON.parse(saved); for(const key of fields)if(data[key]!==undefined)$('post-'+key).value=data[key]; editingFile=data.editingFile||''; editingMetadata=data.editingMetadata||{}; if(editingFile)$('existing-post').value=editingFile; updatePreview();setStatus('Rascunho recuperado'); } } catch {}
 </script>
 </BaseLayout>
