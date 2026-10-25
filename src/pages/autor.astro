@@ -1,15 +1,98 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import Icon from '../components/Icon.astro';
-import {authorRepository} from '../lib/posts';
+import { getPosts, authorRepository, path } from '../lib/posts';
 import config from '../../site.config.mjs';
-const repo=authorRepository();
-const repository=/^[a-zA-Z0-9_.-]+\/[a-zA-Z0-9_.-]+$/.test(repo)?repo:'';
-const root=repository?`https://github.com/${repository}`:'';
-const branch=encodeURIComponent(config.branch);
-const filename=`content/posts/${new Date().toISOString().slice(0,10)}-meu-novo-texto.md`;
-const template=`---\ntitle: "Título do meu texto"\ndate: "${new Date().toISOString().slice(0,10)}"\ncategory: "Cultura"\ntags: []\ndescription: "Uma frase apresentando o texto."\ndraft: false\n---\n\nEscreva seu texto aqui.\n`;
+const repository = authorRepository() || 'GuilhermeDalmoro/linha-nova';
+const branchName = config.branch || 'main';
+const posts = await getPosts();
 ---
-<BaseLayout title="Acesso do autor" description="Acesso à publicação e à configuração da Linha Nova." noindex><div class="container page-shell"><div class="reading-width"><header class="page-heading"><p class="eyebrow">DO CADERNO PARA O MUNDO</p><h1>A próxima linha<br/>é sua.</h1><p>Escreva, revise e publique. Sua conta do GitHub é seu acesso de autor.</p></header>
-{repository?<section class="author-panel"><Icon name="key" size={25}/><h2 style="margin-top:15px">Entrar para escrever</h2><p>Os botões abrem o GitHub. Entre na conta que é dona do projeto para criar ou editar textos. Os leitores não têm permissão para publicar.</p><div class="button-row"><a class="primary-button" href={`${root}/new/${branch}?filename=${encodeURIComponent(filename)}&value=${encodeURIComponent(template)}`} target="_blank" rel="noopener noreferrer">Escrever novo texto <Icon name="external" size={17}/></a><a class="outline-button" href={`${root}/tree/${branch}/content/posts`} target="_blank" rel="noopener noreferrer">Editar meus textos</a></div><ol class="author-steps"><li>Troque o nome do arquivo e preencha o título, a data, a categoria e o resumo.</li><li>Escreva abaixo da segunda linha de três traços. O manual tem exemplos de formatação.</li><li>Clique em <strong>Commit changes</strong> para salvar. Com o Pages configurado, a publicação acontece automaticamente.</li></ol><a class="text-link" href={`${root}#readme`} target="_blank" rel="noopener noreferrer">Abrir o manual completo ↗</a></section>:<section class="author-panel"><h2>Primeiro, conecte seu lugar de escrita.</h2><p>Esta versão ainda não está vinculada ao seu repositório do GitHub. O projeto já inclui o passo a passo completo no arquivo <strong>README.md</strong>.</p><ol class="author-steps"><li>Crie uma conta gratuita no GitHub, se ainda não tiver.</li><li>Crie um repositório público chamado <strong>linha-nova</strong> e envie os arquivos do projeto.</li><li>Em <strong>Settings → Pages</strong>, escolha <strong>GitHub Actions</strong>. O acesso de autor será conectado automaticamente na publicação.</li></ol><a class="primary-button" href="https://github.com/new" target="_blank" rel="noopener noreferrer">Criar meu repositório <Icon name="external" size={17}/></a></section>}
-<section class="author-panel" id="comentarios"><h2>Abrir a conversa</h2><p>Os comentários usam o Giscus e ficam guardados nas discussões do seu repositório. A configuração é gratuita e feita uma única vez.</p><ol class="author-steps"><li>Ative <strong>Discussions</strong> nas configurações do repositório.</li><li>Abra o configurador do Giscus e siga os passos do manual.</li><li>Copie os quatro identificadores públicos para <strong>site.config.mjs</strong> e salve.</li></ol><div class="button-row"><a class="outline-button" href="https://giscus.app/pt" target="_blank" rel="noopener noreferrer">Configurar comentários <Icon name="external" size={16}/></a>{repository&&<a class="text-link" href={`https://github.com/${config.comments.repo||repository}/discussions`} target="_blank" rel="noopener noreferrer">Moderar comentários ↗</a>}</div></section><p class="search-hint">Não existe senha escondida nesta página. O GitHub verifica quem pode alterar os arquivos.</p></div></div></BaseLayout>
+<BaseLayout title="Editor do autor" description="Escreva, revise e prepare artigos para a Linha Nova." noindex>
+<div class="container page-shell author-workspace">
+  <header class="page-heading author-heading"><p class="eyebrow">CADERNO DE AUTOR</p><h1>Escreva com calma.<br/><em>Publique quando quiser.</em></h1><p>Um editor simples para escrever no computador ou no celular. Seus rascunhos ficam salvos neste navegador até você exportar ou enviar ao GitHub.</p></header>
+  <div class="editor-toolbar"><label class="editor-existing">Editar um texto publicado<select id="existing-post"><option value="">Escolha um texto para editar no GitHub…</option>{posts.map(post => <option value={post.data.date.toISOString().slice(0,10) + '-' + post.id + '.md'}>{post.data.title}</option>)}</select></label><span id="save-status" class="editor-status" role="status">Rascunho local</span></div>
+  <form id="author-editor" class="author-editor">
+    <div class="editor-fields">
+      <label>Título<input id="post-title" required maxlength="180" placeholder="O título do seu texto"/></label>
+      <div class="editor-field-row"><label>Data<input id="post-date" type="date" required/></label><label>Categoria<select id="post-category" required><option>Política</option><option>História</option><option>Religião</option><option>Filosofia</option><option selected>Cultura</option><option>Tecnologia</option></select></label></div>
+      <label>Resumo<textarea id="post-description" rows="2" maxlength="260" required placeholder="Uma frase que apresente o texto ao leitor."></textarea></label>
+      <label>Etiquetas <span class="field-hint">separadas por vírgula</span><input id="post-tags" placeholder="história, sociedade, reflexão"/></label>
+      <details class="editor-optional"><summary>Opções de imagem e subtítulo</summary><label>Subtítulo (opcional)<input id="post-subtitle" placeholder="Uma linha de apoio"/></label><label>Endereço da imagem de capa (opcional)<input id="post-cover" type="url" placeholder="/images/minha-imagem.webp"/></label><label>Descrição da imagem (obrigatória se usar capa)<input id="post-coverAlt" placeholder="Descreva o que aparece na imagem"/></label></details>
+    </div>
+    <div class="editor-writing"><div class="editor-writing-heading"><label for="post-body">Seu texto</label><span>Markdown · funciona no celular</span></div><textarea id="post-body" rows="18" required spellcheck="true" placeholder="Comece a escrever aqui…&#10;&#10;## Um subtítulo&#10;&#10;Este é seu espaço. Escreva do seu jeito."></textarea><div class="markdown-help"><strong>Formatação rápida:</strong> <code>## Título</code> · <code>**negrito**</code> · <code>*itálico*</code> · <code>[link](https://...)</code> · <code>![descrição](/images/foto.webp)</code></div></div>
+    <div class="editor-preview-wrap"><div class="editor-preview-heading"><h2>Prévia</h2><button type="button" class="subtle-link" id="toggle-preview" aria-expanded="true">Ocultar prévia</button></div><div id="post-preview" class="editor-preview prose"><p class="preview-placeholder">A prévia do texto aparecerá aqui enquanto você escreve.</p></div></div>
+    <div class="editor-actions"><button type="button" class="outline-button" id="save-local">Salvar rascunho neste aparelho</button><button type="button" class="outline-button" id="download-markdown">Baixar arquivo .md</button><button type="button" class="primary-button" id="publish-github">Preparar no GitHub ↗</button></div>
+  </form>
+  <aside class="editor-note"><h2>Como publicar</h2><p>O editor salva rascunhos apenas neste navegador. Ao preparar no GitHub, o conteúdo é copiado e a página do repositório é aberta. Confira o arquivo, cole o conteúdo se necessário e confirme a alteração. O site será atualizado automaticamente após a publicação.</p><p><a href={"https://github.com/" + repository + "/tree/" + branchName + "/content/posts"} target="_blank" rel="noopener noreferrer">Ver todos os artigos no GitHub ↗</a> · <a href={path('')}>Voltar ao site</a></p></aside>
+</div>
+<script>
+  const $ = id => document.getElementById(id);
+  const fields = ['title','date','category','description','tags','subtitle','cover','coverAlt','body'];
+  const storageKey = 'linha-nova-editor-draft-v1';
+  const repoName = 'GuilhermeDalmoro/linha-nova';
+  const targetBranch = 'main';
+  const now = new Date();
+  const localDate = new Date(now.getTime() - now.getTimezoneOffset()*60000).toISOString().slice(0,10);
+  $('post-date').value = localDate;
+  let editingFile = '';
+  function val(key) { return $('post-' + key).value.trim(); }
+  function escapeHtml(text) { return text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+  function slugify(text) { return text.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'') || 'novo-texto'; }
+  function previewMarkdown(text) {
+    let s = escapeHtml(text);
+    s = s.replace(/^### (.+)$/gm,'<h3>$1</h3>').replace(/^## (.+)$/gm,'<h2>$1</h2>').replace(/^# (.+)$/gm,'<h1>$1</h1>');
+    s = s.replace(/^> (.+)$/gm,'<blockquote>$1</blockquote>').replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\*(.+?)\*/g,'<em>$1</em>').replace(/`([^`]+)`/g,'<code>$1</code>');
+    s = s.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,'<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+    return s.split(/\n\s*\n/).map(p => { p=p.trim(); if(!p)return ''; if(/^<(h[1-3]|blockquote|ul|ol|pre)/.test(p))return p; return '<p>'+p.replace(/\n/g,'<br>')+'</p>'; }).join('');
+  }
+  function updatePreview() {
+    const title=val('title'), desc=val('description'), body=val('body');
+    $('post-preview').innerHTML=(title?'<h1>'+escapeHtml(title)+'</h1>':'')+(desc?'<p class="preview-description">'+escapeHtml(desc)+'</p>':'')+(body?previewMarkdown(body):'<p class="preview-placeholder">A prévia do texto aparecerá aqui enquanto você escreve.</p>');
+  }
+  function markdown() {
+    if(val('cover') && !val('coverAlt')) { alert('Descreva a imagem de capa antes de continuar.'); $('post-coverAlt').focus(); return ''; }
+    const tags=val('tags').split(',').map(s=>s.trim()).filter(Boolean);
+    const q=s=>JSON.stringify(s||'');
+    const lines=['---','title: '+q(val('title')),'date: "'+(val('date')||localDate)+'"','category: '+q(val('category')),'tags: ['+tags.map(q).join(', ')+']','description: '+q(val('description'))];
+    if(val('subtitle'))lines.push('subtitle: '+q(val('subtitle')));
+    if(val('cover'))lines.push('cover: '+q(val('cover')),'coverAlt: '+q(val('coverAlt')));
+    lines.push('draft: false','---','',''+val('body'),'');
+    return lines.join('\n');
+  }
+  function fileName() { return (val('date')||localDate)+'-'+slugify(val('title'))+'.md'; }
+  function setStatus(message) { $('save-status').textContent=message; }
+  for(const key of fields) $('post-'+key).addEventListener('input',updatePreview);
+  $('existing-post').addEventListener('change', () => {
+    editingFile=$('existing-post').value;
+    if(editingFile) {
+      setStatus('Texto selecionado para edição');
+      alert('O GitHub abrirá o arquivo original para edição. Para preservar o texto existente, copie ou baixe seu conteúdo antes de substituir. A edição dentro deste formulário cria um novo arquivo.');
+    } else setStatus('Novo rascunho');
+  });
+  $('save-local').addEventListener('click', () => {
+    const data={}; for(const key of fields)data[key]=val(key);
+    data.savedAt=new Date().toISOString(); localStorage.setItem(storageKey,JSON.stringify(data));
+    setStatus('Salvo neste aparelho · '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}));
+  });
+  $('download-markdown').addEventListener('click', () => {
+    if(!$('author-editor').reportValidity())return;
+    const text=markdown();if(!text)return;
+    const url=URL.createObjectURL(new Blob([text],{type:'text/markdown;charset=utf-8'}));
+    const a=document.createElement('a');a.href=url;a.download=fileName();document.body.append(a);a.click();a.remove();URL.revokeObjectURL(url);setStatus('Arquivo .md baixado');
+  });
+  $('publish-github').addEventListener('click', async () => {
+    if(!$('author-editor').reportValidity())return;
+    const text=markdown();if(!text)return;
+    const filePath='content/posts/'+fileName();
+    const url='https://github.com/'+repoName+'/new/'+targetBranch+'?filename='+encodeURIComponent(filePath)+'&value='+encodeURIComponent(text);
+    try { await navigator.clipboard.writeText(text);setStatus('Conteúdo copiado. Confira no GitHub e confirme a alteração.'); }
+    catch { setStatus('GitHub aberto. Se o conteúdo não aparecer, baixe o arquivo .md e cole-o no GitHub.'); }
+    window.open(url,'_blank','noopener,noreferrer');
+  });
+  $('toggle-preview').addEventListener('click', () => {
+    const hidden=$('post-preview').hidden;$('post-preview').hidden=!hidden;
+    $('toggle-preview').setAttribute('aria-expanded',String(hidden));
+    $('toggle-preview').textContent=hidden?'Ocultar prévia':'Mostrar prévia';
+  });
+  try { const saved=localStorage.getItem(storageKey); if(saved&&confirm('Encontramos um rascunho salvo neste aparelho. Quer recuperá-lo?')) { const data=JSON.parse(saved); for(const key of fields)if(data[key]!==undefined)$('post-'+key).value=data[key]; updatePreview();setStatus('Rascunho recuperado'); } } catch {}
+</script>
+</BaseLayout>
