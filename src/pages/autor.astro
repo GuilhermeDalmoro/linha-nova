@@ -5,11 +5,17 @@ import config from '../../site.config.mjs';
 const repository = authorRepository() || 'GuilhermeDalmoro/linha-nova';
 const branchName = config.branch || 'main';
 const posts = await getPosts();
+const editorPosts = posts.map(post => ({
+  id: post.id, title: post.data.title, date: post.data.date.toISOString().slice(0,10),
+  category: post.data.category, tags: post.data.tags, description: post.data.description,
+  subtitle: post.data.subtitle || '', cover: post.data.cover || '', coverAlt: post.data.coverAlt || '',
+  body: post.body, filename: post.data.date.toISOString().slice(0,10) + '-' + post.id + '.md',
+}));
 ---
 <BaseLayout title="Editor do autor" description="Escreva, revise e prepare artigos para a Linha Nova." noindex>
 <div class="container page-shell author-workspace">
   <header class="page-heading author-heading"><p class="eyebrow">CADERNO DE AUTOR</p><h1>Escreva com calma.<br/><em>Publique quando quiser.</em></h1><p>Um editor simples para escrever no computador ou no celular. Seus rascunhos ficam salvos neste navegador até você exportar ou enviar ao GitHub.</p></header>
-  <div class="editor-toolbar"><label class="editor-existing">Editar um texto publicado<select id="existing-post"><option value="">Escolha um texto para editar no GitHub…</option>{posts.map(post => <option value={post.data.date.toISOString().slice(0,10) + '-' + post.id + '.md'}>{post.data.title}</option>)}</select></label><span id="save-status" class="editor-status" role="status">Rascunho local</span></div>
+  <div class="editor-toolbar"><label class="editor-existing">Editar um texto publicado<select id="existing-post"><option value="">Escolha um texto para editar no GitHub…</option>{editorPosts.map(post => <option value={post.filename}>{post.title}</option>)}</select></label><span id="save-status" class="editor-status" role="status">Rascunho local</span></div>
   <form id="author-editor" class="author-editor">
     <div class="editor-fields">
       <label>Título<input id="post-title" required maxlength="180" placeholder="O título do seu texto"/></label>
@@ -23,10 +29,12 @@ const posts = await getPosts();
     <div class="editor-actions"><button type="button" class="outline-button" id="save-local">Salvar rascunho neste aparelho</button><button type="button" class="outline-button" id="download-markdown">Baixar arquivo .md</button><button type="button" class="primary-button" id="publish-github">Preparar no GitHub ↗</button></div>
   </form>
   <aside class="editor-note"><h2>Como publicar</h2><p>O editor salva rascunhos apenas neste navegador. Ao preparar no GitHub, o conteúdo é copiado e a página do repositório é aberta. Confira o arquivo, cole o conteúdo se necessário e confirme a alteração. O site será atualizado automaticamente após a publicação.</p><p><a href={"https://github.com/" + repository + "/tree/" + branchName + "/content/posts"} target="_blank" rel="noopener noreferrer">Ver todos os artigos no GitHub ↗</a> · <a href={path('')}>Voltar ao site</a></p></aside>
+  <script type="application/json" id="editor-post-data" set:html={JSON.stringify(editorPosts).replace(/</g, String.fromCharCode(92) + 'u003c')}></script>
 </div>
 <script>
   const $ = id => document.getElementById(id);
   const fields = ['title','date','category','description','tags','subtitle','cover','coverAlt','body'];
+  const postData = JSON.parse($('editor-post-data')?.textContent || '[]');
   const storageKey = 'linha-nova-editor-draft-v1';
   const repoName = 'GuilhermeDalmoro/linha-nova';
   const targetBranch = 'main';
@@ -34,6 +42,15 @@ const posts = await getPosts();
   const localDate = new Date(now.getTime() - now.getTimezoneOffset()*60000).toISOString().slice(0,10);
   $('post-date').value = localDate;
   let editingFile = '';
+  function loadPost(post) {
+    for (const key of fields) {
+      const element = $('post-' + key);
+      if (element) element.value = key === 'tags' ? (post.tags || []).join(', ') : (post[key] || (key === 'date' ? localDate : key === 'category' ? 'Cultura' : ''));
+    }
+    editingFile = post.filename;
+    updatePreview();
+    setStatus('Editando: ' + post.title);
+  }
   function val(key) { return $('post-' + key).value.trim(); }
   function escapeHtml(text) { return text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
   function slugify(text) { return text.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'') || 'novo-texto'; }
@@ -62,11 +79,9 @@ const posts = await getPosts();
   function setStatus(message) { $('save-status').textContent=message; }
   for(const key of fields) $('post-'+key).addEventListener('input',updatePreview);
   $('existing-post').addEventListener('change', () => {
-    editingFile=$('existing-post').value;
-    if(editingFile) {
-      setStatus('Texto selecionado para edição');
-      alert('O GitHub abrirá o arquivo original para edição. Para preservar o texto existente, copie ou baixe seu conteúdo antes de substituir. A edição dentro deste formulário cria um novo arquivo.');
-    } else setStatus('Novo rascunho');
+    const selected = postData.find(post => post.filename === $('existing-post').value);
+    if (selected) loadPost(selected);
+    else { editingFile = ''; $('author-editor').reset(); $('post-date').value = localDate; updatePreview(); setStatus('Novo rascunho'); }
   });
   $('save-local').addEventListener('click', () => {
     const data={}; for(const key of fields)data[key]=val(key);
@@ -82,8 +97,8 @@ const posts = await getPosts();
   $('publish-github').addEventListener('click', async () => {
     if(!$('author-editor').reportValidity())return;
     const text=markdown();if(!text)return;
-    const filePath='content/posts/'+fileName();
-    const url='https://github.com/'+repoName+'/new/'+targetBranch+'?filename='+encodeURIComponent(filePath)+'&value='+encodeURIComponent(text);
+    const filePath='content/posts/'+(editingFile || fileName());
+    const url=editingFile ? 'https://github.com/'+repoName+'/edit/'+targetBranch+'/'+filePath.split('/').map(encodeURIComponent).join('/') : 'https://github.com/'+repoName+'/new/'+targetBranch+'?filename='+encodeURIComponent(filePath)+'&value='+encodeURIComponent(text);
     try { await navigator.clipboard.writeText(text);setStatus('Conteúdo copiado. Confira no GitHub e confirme a alteração.'); }
     catch { setStatus('GitHub aberto. Se o conteúdo não aparecer, baixe o arquivo .md e cole-o no GitHub.'); }
     window.open(url,'_blank','noopener,noreferrer');
