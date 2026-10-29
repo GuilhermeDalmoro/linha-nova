@@ -9,7 +9,7 @@ tags:
 - Religião
 featured: true
 draft: false
-cover: public/images/55e1031d6c738d8ac365156ce034f9dd.jpg
+cover: /images/55e1031d6c738d8ac365156ce034f9dd.jpg
 coverAlt: mulher
 ---
 
